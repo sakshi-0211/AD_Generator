@@ -57,10 +57,6 @@ git clone https://github.com/your-username/creative-ad-copy-generator.git
 cd creative-ad-copy-generator
 ```
 
-#### Install Dependencies
-```bash
-pip install -r requirements.txt
-```
 
 #### Set Up API Keys
 Obtain your **Gemini AI** and **Stability AI** API keys.
@@ -74,9 +70,6 @@ STABILITY_API_KEY=your_stability_api_key
 ```bash
 streamlit run app.py
 ```
-
-#### Access the Application
-Open your browser and navigate to [http://localhost:8501](http://localhost:8501).
 
 ## Usage
 
