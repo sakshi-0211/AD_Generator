@@ -4,4 +4,3 @@ google-generativeai
 Pillow
 stability-sdk
 protobuf
-base64
