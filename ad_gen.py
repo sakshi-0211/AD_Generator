@@ -39,7 +39,7 @@ h1 {
 # Add your Gemini API key here
 GEMINI_API_KEY = "AIzaSyARZB0TIMR9Y7PyU_74IdGft5XpvSvv1JY"
 # Add your Stability API key here
-STABILITY_API_KEY = "sk-G9pybmw6inLT5M1ZgCe9qINS6o6qZNNcHD7UN6xmKatTRmF5"
+STABILITY_API_KEY = "sk-Buoja5HjwTUCO63j3YjwvXcLsSCnCwStyJp9GwoSgSyaHye1"
 # Add your dataset path here
 DATASET_PATH = "C:/Users/Dr. Manjunath/OneDrive/Desktop/engg/techxcelerate/train-00000-of-00002-6e587552aa3c8ac8.parquet"
 # ===================================================
@@ -311,66 +311,104 @@ class AdImageGenerator:
         
         # Ultimate fallback - return None and let the calling code handle it
         return None
+
     
     def generate_product_image(self, product_description, dimensions, tone):
-        """Generate realistic product image using Stability AI with tone-specific prompts"""
-        if not self.stability_api:
-            return None
-        
+        print(f"Dimensions received: {dimensions}")
+        print(f"Product Description: {product_description}")
         try:
-            # Extract dimensions
+            if not self.stability_api:
+                st.warning("Image generation API is not available. Using fallback image.")
+                return self.create_placeholder_image(product_description, dimensions)
+
+            # Parse dimensions
             width, height = map(int, dimensions.split('x'))
-            
-            # Create tone-specific prompt modifiers
+
+            # Tone-based modifiers for better AI understanding
             tone_modifiers = {
-                "Professional": "clean professional lighting, minimalist background, corporate style, high quality product photography, white background, clear detailed focus on product features",
-                "Friendly": "bright cheerful lighting, soft pastel colors, welcoming atmosphere, lifestyle setting, people using the product, warm natural daylight, vibrant colors",
-                "Humorous": "quirky setting, vibrant colors, playful composition, unexpected elements, whimsical props, creative angle, exaggerated features",
-                "Urgent": "bold contrasting colors, dramatic lighting, attention-grabbing, dynamic composition, bright red accents, action shot, high impact visual",
-                "Inspirational": "ethereal lighting, aspirational setting, motivational composition, beautiful landscape background, lens flare, golden hour lighting, dream-like quality",
-                "Luxurious": "premium quality, elegant lighting, sophisticated composition, high-end, marble or gold elements, soft shadows, dramatic contrast, studio lighting, black background, minimalist"
+                "Professional": "high quality, clean professional lighting, minimalist background, studio shot",
+                "Friendly": "warm lighting, welcoming environment, lifestyle setting, vibrant colors",
+                "Humorous": "playful, exaggerated features, quirky and fun background",
+                "Urgent": "bold colors, dramatic lighting, high contrast, intense focus",
+                "Inspirational": "dreamy lighting, aspirational setting, motivational energy",
+                "Luxurious": "premium quality, elegant lighting, high-end studio photography, soft shadows"
             }
-            
-            # Create tone-specific style guidance
+
             style_guidance = {
-                "Professional": "style of professional product photography, commercial photography, clean lines",
-                "Friendly": "style of lifestyle photography, authentic moment, candid shot",
-                "Humorous": "style of quirky advertising, creative photography, unexpected juxtaposition",
-                "Urgent": "style of bold advertising, high contrast photography, dramatic composition",
-                "Inspirational": "style of aspirational photography, emotional storytelling, dream-like imagery",
-                "Luxurious": "style of luxury product photography, fashion editorial, high-end magazine"
+                "Professional": "commercial photography, clean lines, high-resolution",
+                "Friendly": "lifestyle photography, candid shot, authentic setting",
+                "Humorous": "quirky advertising, unexpected elements, creative composition",
+                "Urgent": "bold advertising, dramatic impact, high-contrast visuals",
+                "Inspirational": "aspirational photography, storytelling, cinematic lighting",
+                "Luxurious": "luxury product photography, editorial, high-end branding"
             }
-            
-            # Create prompt based on product description and tone
+
+            # Construct the AI prompt dynamically
             modifier = tone_modifiers.get(tone, "high quality")
             style = style_guidance.get(tone, "")
-            
-            prompt = f"Professional advertisement image of {product_description}, {modifier}, {style}, detailed, 8k resolution"
-            
-            # Generate image with specific style guidance
+            prompt = (f"High-quality advertisement image of {product_description}, "
+                    f"{modifier}, {style}, detailed product shot, studio lighting, 8k resolution")
+
+            # Generate the image using Stability AI
             answers = self.stability_api.generate(
                 prompt=prompt,
                 width=width,
                 height=height,
-                cfg_scale=8.0,  # Slightly higher for better prompt adherence
+                cfg_scale=8.0,
                 sampler=generation.SAMPLER_K_DPMPP_2M,
-                steps=40,  # More steps for higher quality
-                seed=0  # Random seed each time
+                steps=40,
+                seed=0
             )
-            
-            # Process and return the image
+
+            # Process and return generated image
             for resp in answers:
                 for artifact in resp.artifacts:
                     if artifact.type == generation.ARTIFACT_IMAGE:
-                        # Convert to PIL Image for further processing
                         img_bytes = artifact.binary
                         img = Image.open(io.BytesIO(img_bytes))
                         return img
-            
-            return None
+
+            st.error("No image generated. Falling back to placeholder.")
+            return self.create_placeholder_image(product_description, dimensions)
+
         except Exception as e:
-            st.error(f"Error generating image with Stability AI: {str(e)}")
-            return None
+            st.warning(f"Stability AI image generation failed: {str(e)}. Falling back to image retrieval.")
+        
+        # RAG fallback - retrieve similar product image from a database or search API
+            return self.retrieve_similar_product_image(product_description)
+        
+    def retrieve_similar_product_image(self, product_description):
+        """Retrieve relevant product image using RAG approach"""
+        try:
+        # Option 1: Use a vector database of product images
+        # embedding = get_embedding(product_description)
+        # similar_image = vector_db.query(embedding)
+        
+        # Option 2: Use a web search API
+        # Using Google Custom Search or similar
+            search_results = search_api.search_images(product_description, num_results=1)
+            image_url = search_results[0]['url']
+        
+        # Download and process image
+            response = requests.get(image_url)
+            img = Image.open(io.BytesIO(response.content))
+            return img
+        
+        except Exception as e:
+            st.error(f"Image retrieval failed: {str(e)}")
+            return self.create_placeholder_image(product_description, dimensions)
+
+    def create_placeholder_image(self, product_description, dimensions):
+        width, height = map(int, dimensions.split('x'))
+        placeholder = Image.new('RGB', (width, height), color=self.color_schemes["Professional"]["background"])
+        draw = ImageDraw.Draw(placeholder)
+
+        # Placeholder text
+        draw.text((width // 4, height // 2), product_description, fill="black")
+
+        return placeholder
+    
+        
     
     def apply_tone_specific_decorations(self, img, draw, width, height, tone, colors):
         """Apply decorative elements based on tone"""
@@ -811,7 +849,7 @@ if st.button("Generate Ad"):
         
         st.session_state.ad_content = ad_content
         
-        # Generate ad image
+                # Generate ad image using Stability AI
         image_bytes = image_generator.create_ad_image(
             ad_content, 
             dimensions, 
@@ -819,6 +857,16 @@ if st.button("Generate Ad"):
             product_description, 
             tone
         )
+        
+        # If Stability AI fails, fallback to RAG
+        if not image_bytes:
+            st.warning("Stability AI failed to generate an image. Trying to retrieve from RAG...")
+            image_bytes = rag_retriever.fetch_product_image(product_name)
+        
+        # Final fallback: Use a placeholder image if both Stability and RAG fail
+        if not image_bytes:
+            st.error("Image generation failed completely. Using placeholder image.")
+            image_bytes = load_placeholder_image()
         
         if image_bytes:
             st.session_state.generated_image = base64.b64encode(image_bytes).decode('utf-8')
@@ -841,7 +889,7 @@ if st.session_state.ad_content:
             if st.session_state.generated_image:
                 st.image(f"data:image/png;base64,{st.session_state.generated_image}", caption="Generated Ad Visual")
             else:
-                st.warning("Image generation is not available. Configure Stability API for image generation.")
+                st.warning("No image available. Ensure Stability AI or RAG retrieval is configured correctly.")
     
     # Add download buttons
     col1, col2 = st.columns(2)
