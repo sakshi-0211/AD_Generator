@@ -37,11 +37,12 @@ h1 {
 
 # ======= CONFIGURATION - REPLACE THESE VALUES =======
 # Add your Gemini API key here
-GEMINI_API_KEY = "AIzaSyARZB0TIMR9Y7PyU_74IdGft5XpvSvv1JY"
+GEMINI_API_KEY = "AIzaSyBWJGc8cNmhBUXhNUoaTjplh-ufuyrHbm8"
 # Add your Stability API key here
-STABILITY_API_KEY = "sk-Buoja5HjwTUCO63j3YjwvXcLsSCnCwStyJp9GwoSgSyaHye1"
+STABILITY_API_KEY = "sk-QZC61Heb3oIYhPmaQoCwFIXkl9MItBaGvAzso3fKRt3An1ui"
 # Add your dataset path here
-DATASET_PATH = "C:/Users/Dr. Manjunath/OneDrive/Desktop/engg/techxcelerate/train-00000-of-00002-6e587552aa3c8ac8.parquet"
+# DATASET_PATH = "/home/dell/Documents/TechX/train-00000-of-00002-6e587552aa3c8ac8.parquet"
+DATASET_PATH = os.path.join(os.path.dirname(__file__), "train-00000-of-00002-6e587552aa3c8ac8.parquet")
 # ===================================================
 
 class AdDatastore:
