@@ -105,8 +105,6 @@ We welcome contributions to this project! If you'd like to contribute, please fo
 3. **Commit your changes** and push to the branch.
 4. **Submit a pull request** with a detailed description of your changes.
 
-## License
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 - **Gemini AI** for providing the natural language processing capabilities.
